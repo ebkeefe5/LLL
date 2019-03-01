@@ -1,0 +1,112 @@
+
+data DPD1 = DP1 Integer Integer [(Integer, Integer)]
+
+
+data DPD2 = DPD2 Integer Integer [Integer]
+
+
+--let (a, b) = (i,j) | i <- [1..6],
+--         			 j <- [1..6]
+
+--count (==5) list
+--(Length.filter p)
+
+--Concatmap(const t1) t2
+
+
+  
+
+
+--A(n algebraic) datatype for DPDs (“discrete probability distributions”) built from pairs of intervals and functions. Intervals in turn should be pairs of numbers representing a range of possible values: you can declare a data type for these as well, if you wish, so that you can distinguish a range from some other pair of integers being used for a different purpose (e.g., ratios, complex numbers, etc.).
+
+--sat :: (Int -> Bool) -> DPD -> Ratio Int
+
+even1 x = x `mod` 2 == 0
+odd1 x = x `mod` 2 == 1
+
+--myLength :: [Integer] -> Integer
+--myLength x = 1
+--myLength (x:xs) = 1 + myLength xs
+
+countP p xs = toInteger(length(filter p xs))
+
+sat :: (Integer -> Bool) -> DPD2 -> Rational
+sat p d = (/) (toRational(countP p (third(d)))) (toRational(toInteger(length(third(d)))))
+--figure out how to convert to floats
+
+
+
+
+--A function which takes a predicate on integers and a DPD and computes the (discrete) probability of getting a result matching that predicate from a roll, perhaps sat :: (Int -> Bool) -> DPD -> Ratio Int (here "sat" is intended to abbreviate “satisfies”).
+
+
+--A function which adds two discrete probability distributions together, so that dice rolls can be combined (perhaps plus :: DPD -> DPD -> DPD).
+
+first (DPD2 a b c) = a
+second (DPD2 a b c) = b
+third (DPD2 a b c) = c
+
+
+
+--plus :: DPD2 -> DPD2 -> DPD2
+
+test1 = DPD2 1 6 [1, 2, 3, 4, 5, 6]
+test2 = DPD2 1 6 [1, 2, 3, 4, 5, 6]
+test3 = DPD2 2 12 [2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 11, 11, 12]
+
+--merge :: [Int] -> [Int] -> [Int]
+--merge xs  [] = []
+--merge [] ys = []
+--merge (x:xs) (ys) = merge2 (x) (ys) : merge (xs) (ys)
+
+--merge2 :: Int -> [Int] -> [Int]
+--merge2 x [] = []
+--merge2 (x) (y:ys) = [x + y] : merge2(x)(ys)
+
+
+
+plus a b = DPD2 (first (a) + first(b)) (second(a) + second(b)) ([a + b | a<-third(a), b<-third(b)])
+
+--A function which takes two integer values (a syntactic “dice roll”) and converts them into a DPD (say as roll :: Int -> Int -> DPD).
+
+roll :: Integer -> Integer -> DPD2
+
+roll (1) (y) = DPD2 1 y [1..y]
+roll (x) (y) = plus (roll (x - 1) (y)) (roll (1) (y))
+
+--showDPD2 :: DPD2 -> String 
+--showDPD2 a = show (first (a)) ++ show (second(a)) ++ (map show third(a)) 
+
+--A function and Show instance which converts a DPD into a histogram string for output, as shown above.
+
+count :: Integer -> [Integer] -> Integer
+count x [] = 0
+count x (y:ys)
+ | x == y = 1 + (count x ys)
+ | otherwise = count x ys
+
+
+
+test4 = [2,3,4,5,6,7,3,4,5,6,7,8,4,5,6,7,8,9,5,6,7,8,9,10,6,7,8,9,10,11,7,8,9,10,11,12]
+
+test5 = putStr(" 5 " ++ " ****** " ++ " \n " ++ " 6 ")
+
+pritDPD2 :: DPD2 -> String
+pritDPD2 x = print2DPD2 (first(x)) (second(x)) (third(x))
+
+print2DPD2 (current) (end) (rolls)
+ |current == end = print3DPD2 current rolls
+ |otherwise = print3DPD2 (current) (rolls) ++ print2DPD2 (current + 1) (end) (rolls) 
+
+--(show (first(x)) ++ " " ++ show(count (first(x)) (third(x))) ++ "\n" )
+
+showStars :: Integer -> String
+showStars x
+ |x == 1 = "*"
+ |otherwise = "*" ++ showStars (x-1)
+
+print3DPD2 a b = (show a ++ " " ++ showStars(count (a) (b)) ++ "\n" )
+
+
+
+printDPD2 x = putStr(pritDPD2 x)
