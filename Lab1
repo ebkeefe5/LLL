@@ -1,0 +1,99 @@
+data Term c o = Con c | App o (Term c o) (Term c o)
+
+type Expr = Term Integer Op
+
+data Op = Add | Mul | Exp  deriving (Eq, Ord)
+
+fold f g (Con c)     = f c
+fold f g (App o l r) = g o (rec l) (rec r)
+                       where rec = fold f g
+
+size = fold (const 1) (\_ n m -> 1 + (n + m))
+hite = fold (const 1) (\_ n m -> 1 + (n `max` m))                       
+
+foldOp a m e Add = a
+foldOp a m e Mul = m
+foldOp a m e Exp = e
+
+
+
+--1. 
+samples = [  Con 17,                                        --  17
+             App Add (Con 2) (App Mul (Con 3) (Con 5)),     --  2 + 3 * 5
+             App Add (square (Con 7)) (square (Con 9)),     --  7^2 + 9^2
+             App Mul (samples!!1) (samples!!2),             --  (2+3*5) * (7^2 + 9^2)
+             App Mul (Con 1)(Con 2),                        -- 1*2 = 2
+             App Add (samples!!1)(samples!!6),              -- (2+3*5) + (32) = 49
+             App Exp (Con 2)(Con 5)                         --2^5 = 32                     
+
+           ]
+           where square x = App Exp x (Con 2)
+
+            
+
+funcOp :: Op -> Integer -> Integer -> Integer
+funcOp = foldOp (+) (*) (^)
+
+--2.
+eval e = fold (id) (funcOp) (e)
+
+showOp :: Op -> String
+showOp = foldOp "+" "*" "^"
+
+--3.
+
+printOp :: Op -> String -> String -> String
+printOp o l r = "(" ++ l ++ " " ++ showOp o ++ " " ++ r ++ ")"
+
+pprt :: Expr -> String
+pprt e = fold (show) (printOp) e
+
+--4.
+
+printOp2 :: Op -> String -> String -> String
+printOp2 o l r = showOp o ++ " " ++ l ++ " " ++ r
+
+pprt2 :: Expr -> String
+pprt2 e = fold (show) (printOp2) e
+
+--5.
+type Expr' = Term String Op
+eval' e = fold (read) (funcOp) (e)
+
+--eval' (App Mul (Con "23") (Con "2"))
+--should return 46
+
+countCon :: Integer -> (Integer, Integer) 
+countCon c = (1, 0)
+countOp :: Op -> (Integer, Integer) -> (Integer, Integer) -> (Integer, Integer)
+countOp o (con1, op1) (con2, op2) = (con1 + con2, op1 + op2 + 1)
+
+--6.
+count :: Expr -> (Integer,Integer)
+count e = fold (countCon) (countOp) e
+--count $ samples !! 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                       
